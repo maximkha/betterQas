@@ -74,13 +74,22 @@ def GetRelevantQuizlets(query: str) -> List[str]:
         if "https://quizlet.com" in t_url:
             urls.append(t_url)
     
+    for el in soup.select("li.b_algo > h2 > a"):
+        t_url = el.attrs["href"]
+        if "https://quizlet.com" in t_url:
+            urls.append(t_url)
+
     return urls
 
-def QAs(question: str, num_quizlets_consider:int=5, similarity_engine:str="hybrid", cutoff:float=.5) -> List[Tuple[float, str, str]]:
+def QAs(question: str, num_quizlets_consider:int=5, similarity_engine:str="hybrid", cutoff:float=.5, verbose:bool = True) -> List[Tuple[float, str, str]]:
     relevant_urls = GetRelevantQuizlets(question)
     if num_quizlets_consider != None: relevant_urls[:num_quizlets_consider]
+    if verbose: print(f"Gathered {len(relevant_urls)} relevant quizlet urls")
 
-    return rankQA(question, sum([GetQAUrl(url) for url in relevant_urls], start=[]), similarity_engine=similarity_engine, cutoff=cutoff)
+    terms = sum([GetQAUrl(url) for url in relevant_urls], start=[])
+    if verbose: print(f"Searching through {len(terms)} terms using {similarity_engine=}")
+
+    return rankQA(question, terms, similarity_engine=similarity_engine, cutoff=cutoff)
 
 def preprocess(question: str) -> List[str]:
     #this should split multi question queries and remove "this/that".
